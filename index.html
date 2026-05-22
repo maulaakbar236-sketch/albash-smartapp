@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Al-Bashriyah Smart Attendance</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary: #7e22ce; /* Premium Purple */
+            --primary-dark: #581c87;
+            --primary-light: #f3e8ff;
+            --bg-color: #f8fafc;
+            --surface: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #3b82f6;
+            --radius-md: 12px;
+            --radius-lg: 20px;
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        
+        body { background-color: var(--bg-color); color: var(--text-main); padding-bottom: 70px; overflow-x: hidden; }
+
+        /* Typography & Utils */
+        h1, h2, h3 { font-weight: 700; }
+        .text-center { text-align: center; }
+        .mt-1 { margin-top: 0.5rem; } .mt-2 { margin-top: 1rem; } .mt-4 { margin-top: 2rem; }
+        .mb-2 { margin-bottom: 1rem; } .mb-4 { margin-bottom: 2rem; }
+        .d-none { display: none !important; }
+        .flex { display: flex; } .flex-col { flex-direction: column; } .items-center { align-items: center; } .justify-between { justify-content: space-between; } .justify-center { justify-content: center; }
+
+        /* App Header */
+        .app-header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 1.5rem 1.2rem;
+            border-bottom-left-radius: var(--radius-lg);
+            border-bottom-right-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .app-header h2 { font-size: 1.2rem; margin-bottom: 0.2rem; }
+        .app-header p { font-size: 0.85rem; opacity: 0.9; }
+
+        /* Container & Cards */
+        .container { padding: 1.2rem; max-width: 600px; margin: 0 auto; }
+        .card { background: var(--surface); border-radius: var(--radius-md); padding: 1.2rem; box-shadow: var(--shadow-sm); margin-bottom: 1rem; }
+        
+        /* Buttons */
+        .btn { border: none; border-radius: 8px; padding: 0.8rem 1.2rem; font-weight: 600; cursor: pointer; transition: all 0.2s ease; width: 100%; display: inline-flex; justify-content: center; align-items: center; gap: 0.5rem; font-size: 0.95rem; }
+        .btn:active { transform: scale(0.98); }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:disabled { background: var(--text-muted); cursor: not-allowed; }
+        .btn-outline { background: transparent; border: 1px solid var(--primary); color: var(--primary); }
+        .btn-danger { background: var(--danger); color: white; }
+
+        /* Forms */
+        .form-group { margin-bottom: 1rem; }
+        .form-label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.4rem; font-weight: 500; }
+        .form-control { width: 100%; padding: 0.8rem; border: 1px solid #e2e8f0; border-radius: 8px; outline: none; font-size: 0.95rem; transition: border 0.2s; background: var(--bg-color); }
+        .form-control:focus { border-color: var(--primary); background: var(--surface); }
+
+        /* Bottom Navigation */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); display: flex; justify-content: space-around; padding: 0.8rem 0; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); z-index: 100; border-top-left-radius: var(--radius-lg); border-top-right-radius: var(--radius-lg); }
+        .nav-item { display: flex; flex-direction: column; align-items: center; color: var(--text-muted); text-decoration: none; font-size: 0.75rem; gap: 0.3rem; transition: color 0.2s; cursor: pointer; width: 20%; }
+        .nav-item i { font-size: 1.2rem; }
+        .nav-item.active { color: var(--primary); font-weight: 600; }
+
+        /* Dashboard Stats Grid */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .stat-card { background: var(--surface); border-radius: var(--radius-md); padding: 1.2rem; box-shadow: var(--shadow-sm); display: flex; align-items: center; gap: 1rem; }
+        .stat-icon { width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; }
+        .bg-purple { background: var(--primary-light); color: var(--primary); }
+        .bg-green { background: #d1fae5; color: var(--success); }
+        .bg-yellow { background: #fef3c7; color: var(--warning); }
+        .bg-red { background: #fee2e2; color: var(--danger); }
+        .stat-info h3 { font-size: 1.2rem; margin: 0; }
+        .stat-info p { font-size: 0.75rem; color: var(--text-muted); margin: 0; }
+
+        /* List Items */
+        .list-item { display: flex; justify-content: space-between; align-items: center; padding: 1rem 0; border-bottom: 1px solid #e2e8f0; }
+        .list-item:last-child { border-bottom: none; }
+        .list-info h4 { font-size: 1rem; color: var(--text-main); margin-bottom: 0.2rem; }
+        .list-info p { font-size: 0.8rem; color: var(--text-muted); }
+
+        /* Absen Radios */
+        .absen-options { display: flex; gap: 0.5rem; }
+        .absen-radio { display: none; }
+        .absen-label { width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.85rem; border: 1px solid #cbd5e1; color: var(--text-muted); cursor: pointer; transition: all 0.2s; }
+        .absen-radio[value="H"]:checked + .absen-label { background: var(--success); color: white; border-color: var(--success); }
+        .absen-radio[value="I"]:checked + .absen-label { background: var(--info); color: white; border-color: var(--info); }
+        .absen-radio[value="S"]:checked + .absen-label { background: var(--warning); color: white; border-color: var(--warning); }
+        .absen-radio[value="A"]:checked + .absen-label { background: var(--danger); color: white; border-color: var(--danger); }
+
+        /* Holiday Banner */
+        .holiday-banner { background: #fee2e2; border: 2px dashed var(--danger); border-radius: var(--radius-md); padding: 2rem 1rem; text-align: center; color: var(--danger); }
+        .holiday-banner i { font-size: 3rem; margin-bottom: 1rem; }
+
+        /* Custom Toast Notification */
+        #toast { position: fixed; top: -100px; left: 50%; transform: translateX(-50%); background: var(--surface); color: var(--text-main); padding: 1rem 2rem; border-radius: 30px; box-shadow: var(--shadow-md); font-weight: 500; font-size: 0.9rem; z-index: 1000; transition: top 0.3s ease; display: flex; align-items: center; gap: 0.5rem; }
+        #toast.show { top: 20px; }
+        
+        /* Spinner */
+        .spinner { border: 3px solid #f3f3f3; border-top: 3px solid var(--primary); border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: none; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Login Screen */
+        #login-view { background: white; height: 100vh; display: flex; align-items: center; justify-content: center; padding: 2rem; z-index: 2000; position: fixed; top: 0; left: 0; width: 100%; }
+        .login-box { width: 100%; max-width: 400px; text-align: center; }
+        .login-logo { width: 80px; height: 80px; background: var(--primary-light); color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto 1.5rem auto; }
+
+        /* Print Styles */
+        @media print {
+            body { padding-bottom: 0; background: white; }
+            .bottom-nav, .app-header, .no-print { display: none !important; }
+            .container { max-width: 100%; padding: 0; }
+            .card { box-shadow: none; border: 1px solid #ccc; margin: 0; page-break-inside: avoid; }
+            #rekap-view { display: block !important; }
+            * { display: none; }
+            #rekap-view, #rekap-view * { display: block; }
+            .print-header { display: block !important; text-align: center; margin-bottom: 20px; }
+            table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+            th, td { border: 1px solid #000; padding: 8px; text-align: left; }
+        }
+        .print-header { display: none; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 0.5rem; text-align: center; border-bottom: 1px solid #eee; font-size: 0.85rem;}
+        th { background: var(--bg-color); font-weight: 600;}
+    </style>
+</head>
+<body>
+
+    <div id="toast"><i class="fas fa-info-circle text-primary"></i> <span id="toast-msg">Pesan</span></div>
+
+    <!-- Login View -->
+    <div id="login-view">
+        <div class="login-box">
+            <div class="login-logo"><i class="fas fa-graduation-cap"></i></div>
+            <h2 class="mb-2">Al-Bashriyah</h2>
+            <p class="text-muted mb-4">Smart Attendance System</p>
+            
+            <div class="form-group text-left" style="text-align: left;">
+                <label class="form-label">Username</label>
+                <input type="text" id="log-user" class="form-control" placeholder="Masukkan username">
+            </div>
+            <div class="form-group text-left" style="text-align: left;">
+                <label class="form-label">Password</label>
+                <input type="password" id="log-pass" class="form-control" placeholder="Masukkan password">
+            </div>
+            <button class="btn btn-primary mt-2" onclick="doLogin()">
+                <div class="spinner" id="login-spin"></div> 
+                <span id="login-text">Masuk Sekarang</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Main App Wrapper -->
+    <div id="app-wrapper" class="d-none">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h2>MTs Al-Bashriyah</h2>
+                    <p id="user-greeting">Halo, Guru</p>
+                </div>
+                <div style="background: rgba(255,255,255,0.2); width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center;">
+                    <i class="fas fa-bell"></i>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dashboard View -->
+        <main id="dashboard-view" class="container view-section">
+            <h3 class="mb-2">Ringkasan Hari Ini</h3>
+            <p class="text-muted mb-4" id="current-date">Senin, 10 Agustus 2026</p>
+            
+            <div class="stats-grid mb-4">
+                <div class="stat-card">
+                    <div class="stat-icon bg-purple"><i class="fas fa-users"></i></div>
+                    <div class="stat-info">
+                        <h3 id="dash-siswa">0</h3>
+                        <p>Total Siswa</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon bg-purple"><i class="fas fa-chalkboard"></i></div>
+                    <div class="stat-info">
+                        <h3 id="dash-kelas">0</h3>
+                        <p>Total Kelas</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon bg-green"><i class="fas fa-user-check"></i></div>
+                    <div class="stat-info">
+                        <h3 id="dash-hadir">0</h3>
+                        <p>Hadir</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon bg-red"><i class="fas fa-user-times"></i></div>
+                    <div class="stat-info">
+                        <h3 id="dash-alfa">0</h3>
+                        <p>Alfa</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Kelas & Siswa View (Master Data) -->
+        <main id="kelas-view" class="container view-section d-none">
+            <div class="flex justify-between items-center mb-4">
+                <h3>Data Kelas</h3>
+                <button class="btn btn-outline" style="width: auto; padding: 0.4rem 0.8rem;" onclick="loadKelas()"><i class="fas fa-sync"></i></button>
+            </div>
+            
+            <div class="card">
+                <div class="form-group">
+                    <input type="text" id="add-kelas-nama" class="form-control" placeholder="Nama Kelas (ex: VII-A)">
+                </div>
+                <button class="btn btn-primary" onclick="addKelas()">Tambah Kelas</button>
+            </div>
+
+            <div id="kelas-list" class="mt-4">
+                <!-- Data will append here -->
+                <p class="text-center text-muted">Memuat data kelas...</p>
+            </div>
+        </main>
+
+        <!-- Absensi View -->
+        <main id="absen-view" class="container view-section d-none">
+            <h3 class="mb-4">Input Absensi</h3>
+            
+            <!-- Holiday Banner Container -->
+            <div id="holiday-container" class="d-none mb-4">
+                <div class="holiday-banner">
+                    <i class="fas fa-calendar-times"></i>
+                    <h2>Hari Libur Sekolah</h2>
+                    <p class="mt-1" id="holiday-reason">Sabtu - Minggu</p>
+                    <p class="mt-2 text-muted" style="font-size:0.8rem;">Sistem absensi dinonaktifkan secara otomatis.</p>
+                </div>
+            </div>
+
+            <!-- Absensi Form Container -->
+            <div id="absen-form-container">
+                <div class="card mb-4">
+                    <div class="form-group">
+                        <label class="form-label">Pilih Kelas</label>
+                        <select id="absen-kelas-select" class="form-control" onchange="loadSiswaForAbsen()">
+                            <option value="">-- Pilih Kelas --</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Tanggal</label>
+                        <input type="date" id="absen-tanggal" class="form-control">
+                    </div>
+                </div>
+
+                <div class="card d-none" id="absen-list-card">
+                    <div class="flex justify-between items-center mb-2">
+                        <h4>Daftar Siswa</h4>
+                        <span style="font-size:0.75rem; color:var(--text-muted)">H I S A</span>
+                    </div>
+                    <div id="absen-siswa-list">
+                        <!-- Siswa list radios here -->
+                    </div>
+                    <button class="btn btn-primary mt-4" id="btn-save-absen" onclick="saveAbsensi()">
+                        <i class="fas fa-save"></i> Simpan Absensi
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <!-- Rekap View -->
+        <main id="rekap-view" class="container view-section d-none">
+            <div class="no-print">
+                <h3 class="mb-4">Rekap Laporan</h3>
+                <div class="card mb-4">
+                    <div class="form-group">
+                        <label class="form-label">Pilih Kelas</label>
+                        <select id="rekap-kelas" class="form-control">
+                            <option value="">-- Semua Kelas --</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Tanggal</label>
+                        <input type="date" id="rekap-tanggal" class="form-control">
+                    </div>
+                    <button class="btn btn-primary" onclick="generateRekapHarian()"><i class="fas fa-search"></i> Tampilkan Rekap</button>
+                </div>
+                <div class="flex justify-between items-center mb-2">
+                    <h4>Hasil Rekap</h4>
+                    <button class="btn btn-outline" style="width:auto; padding: 0.3rem 0.6rem; font-size:0.8rem;" onclick="window.print()"><i class="fas fa-print"></i> Cetak PDF</button>
+                </div>
+            </div>
+
+            <!-- Print Area -->
+            <div id="print-area" class="card">
+                <div class="print-header">
+                    <h2>LAPORAN ABSENSI HARIAN</h2>
+                    <h3>MTs AL-BASHRIYAH</h3>
+                    <p id="print-subtitle">Tanggal: -</p>
+                    <hr style="margin: 10px 0;">
+                </div>
+                <div style="overflow-x: auto;">
+                    <table id="rekap-table">
+                        <thead>
+                            <tr>
+                                <th style="text-align:left;">Nama Siswa</th>
+                                <th>NIS</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rekap-tbody">
+                            <tr><td colspan="3" class="text-center text-muted">Belum ada data ditampilkan</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+
+        <!-- Akun & Pengaturan View -->
+        <main id="akun-view" class="container view-section d-none">
+            <h3 class="mb-4">Pengaturan Sistem</h3>
+            <div class="card text-center mb-4">
+                <div style="width:70px; height:70px; background:var(--primary-light); color:var(--primary); border-radius:50%; font-size:2rem; display:flex; align-items:center; justify-content:center; margin:0 auto 1rem auto;">
+                    <i class="fas fa-user-shield"></i>
+                </div>
+                <h3 id="profile-name">Administrator</h3>
+                <p class="text-muted" id="profile-role">Admin</p>
+                <button class="btn btn-outline mt-4" onclick="doLogout()"><i class="fas fa-sign-out-alt"></i> Keluar Aplikasi</button>
+            </div>
+
+            <h4>Database Setup (Admin)</h4>
+            <div class="card mt-2">
+                <p class="text-muted" style="font-size:0.85rem; margin-bottom:1rem;">Jalankan ini hanya saat pertama kali deploy untuk membuat tabel di Spreadsheet.</p>
+                <button class="btn btn-primary" onclick="setupDatabase()"><i class="fas fa-database"></i> Setup Database Default</button>
+            </div>
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <a class="nav-item active" onclick="switchTab('dashboard')"><i class="fas fa-home"></i><span>Home</span></a>
+            <a class="nav-item" onclick="switchTab('kelas')"><i class="fas fa-chalkboard"></i><span>Kelas</span></a>
+            <a class="nav-item" onclick="switchTab('absen')"><i class="fas fa-clipboard-user"></i><span>Absen</span></a>
+            <a class="nav-item" onclick="switchTab('rekap')"><i class="fas fa-file-alt"></i><span>Rekap</span></a>
+            <a class="nav-item" onclick="switchTab('akun')"><i class="fas fa-cog"></i><span>Akun</span></a>
+        </nav>
+    </div>
+
+    <script>
+        // =========================================================
+        // PENGATURAN API GOOGLE APPS SCRIPT
+        // =========================================================
+        const API_URL = "https://script.google.com/macros/s/AKfycbzTnOmNM0kAQtqqakNHksh1b2_da-nhZkuAJXVpSrk-tP2-r2eJrtXKJKhnUjFHuRmR/exec"; // GANTI DENGAN URL DEPLOY ANDA
+        
+        // Global State
+        let currentUser = null;
+        let dataKelas = [];
+        let dataSiswa = [];
+        let hariAktif = ["Aktif", "Aktif", "Aktif", "Aktif", "Aktif", "Libur", "Libur"]; // Default
+        let liburTambahan = [];
+
+        // UI Helpers
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').innerText = msg;
+            toast.style.color = isError ? "var(--danger)" : "var(--text-main)";
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        function setSpinner(btnId, show) {
+            const btn = document.getElementById(btnId);
+            if(!btn) return;
+            const spin = btn.querySelector('.spinner');
+            const txt = btn.querySelector('span');
+            if(spin && txt) {
+                spin.style.display = show ? 'block' : 'none';
+                txt.style.display = show ? 'none' : 'block';
+                btn.disabled = show;
+            }
+        }
+
+        // Generic Fetch Function
+        async function fetchAPI(action, data = {}, isPost = true) {
+            try {
+                let url = `${API_URL}?action=${action}`;
+                let options = { method: 'GET' };
+                
+                if (isPost) {
+                    options = {
+                        method: 'POST',
+                        body: JSON.stringify(data),
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' } // text/plain to avoid CORS preflight in GAS
+                    };
+                }
+                
+                const response = await fetch(url, options);
+                const result = await response.json();
+                if(!result.success) throw new Error(result.message);
+                return result;
+            } catch (error) {
+                console.error(error);
+                showToast(error.message, true);
+                return null;
+            }
+        }
+
+        // Init App
+        window.onload = () => {
+            const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('current-date').innerText = new Date().toLocaleDateString('id-ID', dateOptions);
+            document.getElementById('absen-tanggal').valueAsDate = new Date();
+            document.getElementById('rekap-tanggal').valueAsDate = new Date();
+            
+            checkLogin();
+        };
+
+        function checkLogin() {
+            const savedUser = localStorage.getItem('albashriyah_user');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                document.getElementById('login-view').classList.add('d-none');
+                document.getElementById('app-wrapper').classList.remove('d-none');
+                document.getElementById('user-greeting').innerText = `Halo, ${currentUser.nama}`;
+                document.getElementById('profile-name').innerText = currentUser.nama;
+                document.getElementById('profile-role').innerText = currentUser.role.toUpperCase();
+                
+                // Load Initial Data
+                loadDashboard();
+                loadHolidays();
+            }
+        }
+
+        async function doLogin() {
+            const u = document.getElementById('log-user').value;
+            const p = document.getElementById('log-pass').value;
+            if(!u || !p) return showToast('Username dan Password wajib diisi!', true);
+
+            setSpinner('login-spin', true); // Custom pseudo-id for spinner handling logic adaptation
+            document.getElementById('login-text').style.display = 'none';
+            document.getElementById('login-spin').style.display = 'block';
+
+            const res = await fetchAPI('login', { username: u, password: p });
+            
+            document.getElementById('login-text').style.display = 'block';
+            document.getElementById('login-spin').style.display = 'none';
+
+            if(res && res.success) {
+                localStorage.setItem('albashriyah_user', JSON.stringify(res.data));
+                showToast("Login Berhasil!");
+                checkLogin();
+            }
+        }
+
+        function doLogout() {
+            localStorage.removeItem('albashriyah_user');
+            location.reload();
+        }
+
+        function switchTab(tabId) {
+            // Update Nav UI
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            
+            // Update View
+            document.querySelectorAll('.view-section').forEach(el => el.classList.add('d-none'));
+            document.getElementById(`${tabId}-view`).classList.remove('d-none');
+
+            // Trigger load data based on tab
+            if(tabId === 'dashboard') loadDashboard();
+            if(tabId === 'kelas') loadKelas();
+            if(tabId === 'absen') prepareAbsenTab();
+            if(tabId === 'rekap') populateRekapDropdowns();
+        }
+
+        async function loadDashboard() {
+            const res = await fetchAPI('getDashboard', {}, false);
+            if(res) {
+                document.getElementById('dash-siswa').innerText = res.data.siswa;
+                document.getElementById('dash-kelas').innerText = res.data.kelas;
+                document.getElementById('dash-hadir').innerText = res.data.absen.h;
+                document.getElementById('dash-alfa').innerText = res.data.absen.a;
+            }
+        }
+
+        async function loadKelas() {
+            const list = document.getElementById('kelas-list');
+            list.innerHTML = '<p class="text-center text-muted">Memuat data...</p>';
+            
+            const res = await fetchAPI('getKelas', {}, false);
+            if(res) {
+                dataKelas = res.data || [];
+                list.innerHTML = '';
+                if(dataKelas.length === 0) list.innerHTML = '<p class="text-center text-muted">Belum ada kelas</p>';
+                
+                dataKelas.forEach(k => {
+                    list.innerHTML += `
+                        <div class="card list-item flex-row">
+                            <div class="list-info">
+                                <h4>${k.nama_kelas}</h4>
+                                <p>Wali: ${k.wali_kelas || '-'}</p>
+                            </div>
+                            <button class="btn btn-danger" style="width:auto; padding: 0.4rem 0.8rem;" onclick="deleteKelas('${k.id}')"><i class="fas fa-trash"></i></button>
+                        </div>
+                    `;
+                });
+            }
+        }
+
+        async function addKelas() {
+            const nama = document.getElementById('add-kelas-nama').value;
+            if(!nama) return showToast("Nama kelas wajib diisi!", true);
+            const id = 'KLS-' + Date.now();
+            
+            showToast("Menyimpan...");
+            const res = await fetchAPI('addKelas', { id, nama, wali: '-' });
+            if(res) {
+                document.getElementById('add-kelas-nama').value = '';
+                showToast("Kelas berhasil ditambah!");
+                loadKelas();
+            }
+        }
+
+        async function deleteKelas(id) {
+            // Using a simple custom confirm alternative using standard prompt to avoid strict alert/confirm rules in UI rendering if preferred, but simple logic is better.
+            // Since strict rules say "Do not use alert() and confirm() under any circumstances", I will just delete it directly with a toast info.
+            showToast("Menghapus data...");
+            const res = await fetchAPI('deleteKelas', { id });
+            if(res) {
+                showToast("Data dihapus!");
+                loadKelas();
+            }
+        }
+
+        async function loadHolidays() {
+            const resHari = await fetchAPI('getHariAktif', {}, false);
+            if(resHari && resHari.data.length > 0) hariAktif = resHari.data;
+            
+            const resLibur = await fetchAPI('getLibur', {}, false);
+            if(resLibur && resLibur.data) liburTambahan = resLibur.data;
+        }
+
+        function checkIsHoliday(dateObj) {
+            // 1. Cek Hari Aktif (0 = Minggu, 1 = Senin, ... 6 = Sabtu)
+            let dayIndex = dateObj.getDay();
+            // Map getDay() ke array hariAktif (Senin=0, Selasa=1... Minggu=6)
+            let mapIndex = dayIndex === 0 ? 6 : dayIndex - 1; 
+            
+            if (hariAktif[mapIndex] && hariAktif[mapIndex].toLowerCase() === 'libur') {
+                return { isHoliday: true, reason: "Hari Libur Rutin Mingguan" };
+            }
+
+            // 2. Cek Libur Tambahan
+            const dateStr = dateObj.toISOString().split('T')[0];
+            const liburCustom = liburTambahan.find(l => l.tanggal.split('T')[0] === dateStr);
+            if(liburCustom) {
+                return { isHoliday: true, reason: liburCustom.keterangan };
+            }
+
+            return { isHoliday: false, reason: "" };
+        }
+
+        async function prepareAbsenTab() {
+            // Populate select kelas
+            if(dataKelas.length === 0) {
+                const res = await fetchAPI('getKelas', {}, false);
+                if(res) dataKelas = res.data || [];
+            }
+            
+            const select = document.getElementById('absen-kelas-select');
+            select.innerHTML = '<option value="">-- Pilih Kelas --</option>';
+            dataKelas.forEach(k => {
+                select.innerHTML += `<option value="${k.nama_kelas}">${k.nama_kelas}</option>`;
+            });
+
+            // Cek Libur Hari ini
+            const dateObj = document.getElementById('absen-tanggal').valueAsDate || new Date();
+            const holidayCheck = checkIsHoliday(dateObj);
+            
+            if(holidayCheck.isHoliday) {
+                document.getElementById('holiday-container').classList.remove('d-none');
+                document.getElementById('absen-form-container').classList.add('d-none');
+                document.getElementById('holiday-reason').innerText = holidayCheck.reason;
+            } else {
+                document.getElementById('holiday-container').classList.add('d-none');
+                document.getElementById('absen-form-container').classList.remove('d-none');
+            }
+
+            // Add listener to date change
+            document.getElementById('absen-tanggal').addEventListener('change', prepareAbsenTab);
+        }
+
+        async function loadSiswaForAbsen() {
+            const kelas = document.getElementById('absen-kelas-select').value;
+            if(!kelas) {
+                document.getElementById('absen-list-card').classList.add('d-none');
+                return;
+            }
+
+            document.getElementById('absen-list-card').classList.remove('d-none');
+            const list = document.getElementById('absen-siswa-list');
+            list.innerHTML = '<p class="text-center text-muted my-2">Memuat daftar siswa...</p>';
+
+            const res = await fetchAPI('getSiswa', { kelas }, true);
+            if(res) {
+                dataSiswa = res.data || [];
+                list.innerHTML = '';
+                if(dataSiswa.length === 0) list.innerHTML = '<p class="text-center text-muted">Belum ada siswa di kelas ini. Masukkan via Spreadsheet.</p>';
+                
+                dataSiswa.forEach(s => {
+                    list.innerHTML += `
+                        <div class="list-item">
+                            <div class="list-info">
+                                <h4 style="font-size:0.9rem;">${s.nama}</h4>
+                                <p style="font-size:0.75rem;">NIS: ${s.nis}</p>
+                            </div>
+                            <div class="absen-options">
+                                <input type="radio" name="abs_${s.nis}" id="h_${s.nis}" value="H" class="absen-radio" checked>
+                                <label for="h_${s.nis}" class="absen-label">H</label>
+                                
+                                <input type="radio" name="abs_${s.nis}" id="i_${s.nis}" value="I" class="absen-radio">
+                                <label for="i_${s.nis}" class="absen-label">I</label>
+                                
+                                <input type="radio" name="abs_${s.nis}" id="s_${s.nis}" value="S" class="absen-radio">
+                                <label for="s_${s.nis}" class="absen-label">S</label>
+                                
+                                <input type="radio" name="abs_${s.nis}" id="a_${s.nis}" value="A" class="absen-radio">
+                                <label for="a_${s.nis}" class="absen-label">A</label>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+        }
+
+        async function saveAbsensi() {
+            const tgl = document.getElementById('absen-tanggal').value;
+            const kelas = document.getElementById('absen-kelas-select').value;
+            if(!kelas) return showToast("Pilih kelas terlebih dahulu!", true);
+            
+            const btn = document.getElementById('btn-save-absen');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+            btn.disabled = true;
+
+            const dateObj = new Date(tgl);
+            const bln = dateObj.toLocaleString('id-ID', { month: 'long', year: 'numeric' });
+            
+            let dataAbsen = [];
+            dataSiswa.forEach(s => {
+                const status = document.querySelector(`input[name="abs_${s.nis}"]:checked`).value;
+                dataAbsen.push({ nis: s.nis, nama: s.nama, status: status });
+            });
+
+            const res = await fetchAPI('saveAbsen', { tanggal: tgl, bulan: bln, kelas: kelas, absensi: dataAbsen });
+            
+            btn.innerHTML = '<i class="fas fa-save"></i> Simpan Absensi';
+            btn.disabled = false;
+            
+            if(res && res.success) {
+                showToast("Berhasil menyimpan absensi!");
+                loadDashboard(); // Update stats
+            }
+        }
+
+        function populateRekapDropdowns() {
+            const select = document.getElementById('rekap-kelas');
+            if(select.options.length <= 1) {
+                dataKelas.forEach(k => {
+                    select.innerHTML += `<option value="${k.nama_kelas}">${k.nama_kelas}</option>`;
+                });
+            }
+        }
+
+        async function generateRekapHarian() {
+            const kelas = document.getElementById('rekap-kelas').value;
+            const tgl = document.getElementById('rekap-tanggal').value;
+            
+            showToast("Mengambil data rekap...");
+            const res = await fetchAPI('getRekapHarian', { tanggal: tgl, kelas: kelas });
+            
+            if(res) {
+                const tbody = document.getElementById('rekap-tbody');
+                tbody.innerHTML = '';
+                
+                document.getElementById('print-subtitle').innerText = `Tanggal: ${tgl} | Kelas: ${kelas || 'Semua Kelas'}`;
+
+                if(res.data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted">Tidak ada data untuk tanggal ini</td></tr>';
+                    return;
+                }
+
+                res.data.forEach(item => {
+                    let stLabel = item.status === 'H' ? 'Hadir' : item.status === 'I' ? 'Izin' : item.status === 'S' ? 'Sakit' : 'Alfa';
+                    tbody.innerHTML += `
+                        <tr>
+                            <td style="text-align:left;">${item.nama}</td>
+                            <td>${item.nis}</td>
+                            <td><strong>${stLabel}</strong></td>
+                        </tr>
+                    `;
+                });
+            }
+        }
+
+        async function setupDatabase() {
+            showToast("Menyiapkan database di Spreadsheet...");
+            const res = await fetchAPI('setup', {}, false);
+            if(res && res.success) {
+                showToast("Database berhasil dibuat! Silakan cek Spreadsheet.");
+            }
+        }
+    </script>
+</body>
+</html>
