@@ -219,21 +219,78 @@
 
         <!-- Kelas & Siswa View (Master Data) -->
         <main id="kelas-view" class="container view-section d-none">
-            <div class="flex justify-between items-center mb-4">
-                <h3>Data Kelas</h3>
-                <button class="btn btn-outline" style="width: auto; padding: 0.4rem 0.8rem;" onclick="loadKelas()"><i class="fas fa-sync"></i></button>
-            </div>
-            
-            <div class="card">
-                <div class="form-group">
-                    <input type="text" id="add-kelas-nama" class="form-control" placeholder="Nama Kelas (ex: VII-A)">
-                </div>
-                <button class="btn btn-primary" onclick="addKelas()">Tambah Kelas</button>
+            <!-- Tabs Data Master -->
+            <div class="flex mb-4" style="gap: 0.5rem;">
+                <button class="btn btn-primary" id="tab-btn-kelas" onclick="switchMasterTab('kelas')" style="flex:1;">Data Kelas</button>
+                <button class="btn btn-outline" id="tab-btn-siswa" onclick="switchMasterTab('siswa')" style="flex:1;">Data Siswa</button>
             </div>
 
-            <div id="kelas-list" class="mt-4">
-                <!-- Data will append here -->
-                <p class="text-center text-muted">Memuat data kelas...</p>
+            <!-- BAGIAN KELAS -->
+            <div id="master-kelas-section">
+                <div class="flex justify-between items-center mb-4">
+                    <h3>Data Kelas</h3>
+                    <button class="btn btn-outline" style="width: auto; padding: 0.4rem 0.8rem;" onclick="loadKelas()"><i class="fas fa-sync"></i></button>
+                </div>
+                
+                <div class="card">
+                    <div class="form-group">
+                        <label class="form-label">Nama Kelas</label>
+                        <input type="text" id="add-kelas-nama" class="form-control" placeholder="Contoh: VII-A">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Wali Kelas</label>
+                        <input type="text" id="add-kelas-wali" class="form-control" placeholder="Nama Wali Kelas">
+                    </div>
+                    <button class="btn btn-primary" onclick="addKelas()">Tambah Kelas</button>
+                </div>
+
+                <div id="kelas-list" class="mt-4">
+                    <p class="text-center text-muted">Memuat data kelas...</p>
+                </div>
+            </div>
+
+            <!-- BAGIAN SISWA -->
+            <div id="master-siswa-section" class="d-none">
+                <div class="flex justify-between items-center mb-4">
+                    <h3>Data Siswa</h3>
+                    <button class="btn btn-outline" style="width: auto; padding: 0.4rem 0.8rem;" onclick="loadSiswaMaster()"><i class="fas fa-sync"></i></button>
+                </div>
+                
+                <div class="card">
+                    <div class="form-group">
+                        <label class="form-label">NIS</label>
+                        <input type="number" id="add-siswa-nis" class="form-control" placeholder="Nomor Induk Siswa">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Nama Lengkap</label>
+                        <input type="text" id="add-siswa-nama" class="form-control" placeholder="Nama Siswa">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Jenis Kelamin</label>
+                        <select id="add-siswa-jk" class="form-control">
+                            <option value="L">Laki-laki</option>
+                            <option value="P">Perempuan</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Pilih Kelas</label>
+                        <select id="add-siswa-kelas" class="form-control">
+                            <option value="">-- Pilih Kelas --</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" onclick="addSiswa()">Tambah Siswa</button>
+                </div>
+
+                <div class="form-group mt-4">
+                    <label class="form-label">Filter berdasarkan Kelas</label>
+                    <select id="filter-siswa-kelas" class="form-control" onchange="loadSiswaMaster()">
+                        <option value="">-- Semua Kelas --</option>
+                    </select>
+                </div>
+
+                <div id="siswa-list" class="mt-2">
+                    <p class="text-center text-muted">Memuat data siswa...</p>
+                </div>
             </div>
         </main>
 
@@ -480,7 +537,7 @@
 
             // Trigger load data based on tab
             if(tabId === 'dashboard') loadDashboard();
-            if(tabId === 'kelas') loadKelas();
+            if(tabId === 'kelas') switchMasterTab('kelas');
             if(tabId === 'absen') prepareAbsenTab();
             if(tabId === 'rekap') populateRekapDropdowns();
         }
@@ -521,13 +578,15 @@
 
         async function addKelas() {
             const nama = document.getElementById('add-kelas-nama').value;
+            const wali = document.getElementById('add-kelas-wali').value || '-';
             if(!nama) return showToast("Nama kelas wajib diisi!", true);
             const id = 'KLS-' + Date.now();
             
             showToast("Menyimpan...");
-            const res = await fetchAPI('addKelas', { id, nama, wali: '-' });
+            const res = await fetchAPI('addKelas', { id, nama, wali: wali });
             if(res) {
                 document.getElementById('add-kelas-nama').value = '';
+                document.getElementById('add-kelas-wali').value = '';
                 showToast("Kelas berhasil ditambah!");
                 loadKelas();
             }
@@ -541,6 +600,101 @@
             if(res) {
                 showToast("Data dihapus!");
                 loadKelas();
+            }
+        }
+
+        // --- NEW FUNCTIONS FOR SISWA & MASTER TABS ---
+        function switchMasterTab(tab) {
+            const btnKelas = document.getElementById('tab-btn-kelas');
+            const btnSiswa = document.getElementById('tab-btn-siswa');
+            const secKelas = document.getElementById('master-kelas-section');
+            const secSiswa = document.getElementById('master-siswa-section');
+
+            if(tab === 'kelas') {
+                btnKelas.className = 'btn btn-primary';
+                btnSiswa.className = 'btn btn-outline';
+                secKelas.classList.remove('d-none');
+                secSiswa.classList.add('d-none');
+                loadKelas();
+            } else {
+                btnSiswa.className = 'btn btn-primary';
+                btnKelas.className = 'btn btn-outline';
+                secSiswa.classList.remove('d-none');
+                secKelas.classList.add('d-none');
+                loadSiswaMaster();
+            }
+        }
+
+        async function loadSiswaMaster() {
+            const list = document.getElementById('siswa-list');
+            list.innerHTML = '<p class="text-center text-muted">Memuat data...</p>';
+            
+            // Populate dropdowns
+            const selectAdd = document.getElementById('add-siswa-kelas');
+            const selectFilter = document.getElementById('filter-siswa-kelas');
+            
+            if(dataKelas.length === 0) {
+                const resKls = await fetchAPI('getKelas', {}, false);
+                if(resKls) dataKelas = resKls.data || [];
+            }
+            
+            if(selectAdd.options.length <= 1) {
+                dataKelas.forEach(k => {
+                    selectAdd.innerHTML += `<option value="${k.nama_kelas}">${k.nama_kelas}</option>`;
+                    selectFilter.innerHTML += `<option value="${k.nama_kelas}">${k.nama_kelas}</option>`;
+                });
+            }
+
+            const filterKelas = selectFilter.value;
+            const res = await fetchAPI('getSiswa', { kelas: filterKelas }, true);
+            
+            if(res) {
+                let allSiswa = res.data || [];
+                list.innerHTML = '';
+                if(allSiswa.length === 0) list.innerHTML = '<p class="text-center text-muted">Belum ada siswa.</p>';
+                
+                allSiswa.forEach(s => {
+                    list.innerHTML += `
+                        <div class="card list-item flex-row">
+                            <div class="list-info">
+                                <h4 style="font-size:0.95rem">${s.nama} (${s.jk})</h4>
+                                <p style="font-size:0.8rem">NIS: ${s.nis} | Kelas: ${s.kelas}</p>
+                            </div>
+                            <button class="btn btn-danger" style="width:auto; padding: 0.3rem 0.6rem;" onclick="deleteSiswaMaster('${s.id}')"><i class="fas fa-trash"></i></button>
+                        </div>
+                    `;
+                });
+            }
+        }
+
+        async function addSiswa() {
+            const nis = document.getElementById('add-siswa-nis').value;
+            const nama = document.getElementById('add-siswa-nama').value;
+            const jk = document.getElementById('add-siswa-jk').value;
+            const kelas = document.getElementById('add-siswa-kelas').value;
+            
+            if(!nis || !nama || !kelas) return showToast("NIS, Nama, dan Kelas wajib diisi!", true);
+            
+            const id = 'SSW-' + Date.now();
+            showToast("Menyimpan...");
+            const res = await fetchAPI('addSiswa', { 
+                id: id, nis: nis, nama: nama, jk: jk, kelas: kelas, alamat: '-', hp: '-' 
+            });
+            
+            if(res) {
+                document.getElementById('add-siswa-nis').value = '';
+                document.getElementById('add-siswa-nama').value = '';
+                showToast("Siswa berhasil ditambah!");
+                loadSiswaMaster();
+            }
+        }
+
+        async function deleteSiswaMaster(id) {
+            showToast("Menghapus data...");
+            const res = await fetchAPI('deleteSiswa', { id });
+            if(res) {
+                showToast("Siswa dihapus!");
+                loadSiswaMaster();
             }
         }
 
